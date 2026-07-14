@@ -112,6 +112,7 @@ tests/                    Focused tests
 - [RAG mental roadmap](docs/rag-mental-roadmap.md)
 - [Chunking strategy notes](docs/chunking-strategy-cheatsheet.md)
 - [Future-state modules](docs/future-state-modules.md)
+- [Project 1 closeout](docs/project-1-closeout.md)
 
 ## Production Mapping
 
