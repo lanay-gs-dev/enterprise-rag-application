@@ -118,6 +118,7 @@ tests/                    Focused tests
 - [RAG mental roadmap](docs/rag-mental-roadmap.md)
 - [Chunking strategy notes](docs/chunking-strategy-cheatsheet.md)
 - [Evaluation harness](docs/evaluation.md)
+- [AWS deployment steps](docs/aws-deployment-steps.md)
 - [Future-state modules](docs/future-state-modules.md)
 - [Project 1 closeout](docs/project-1-closeout.md)
 - [Tomorrow plan](docs/tomorrow-plan.md)
