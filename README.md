@@ -4,7 +4,7 @@ Retrieval-Augmented Generation system for answering questions from internal comp
 
 It exists to turn scattered company knowledge into trustworthy answers. The interesting part is the foundation: documents must be validated, owned, classified, chunked, and traceable before a model can answer safely.
 
-Current implementation: Markdown ingestion, metadata validation, deterministic chunking, local embedding utilities, a local Chroma vector store wrapper, retrieval, deterministic refusal/answer response shaping, sample enterprise documents, and tests.
+Current implementation: Markdown ingestion, metadata validation, deterministic chunking, local embedding utilities, a local Chroma vector store wrapper, retrieval, deterministic refusal/answer response shaping, a local Streamlit demo, sample enterprise documents, and tests.
 
 Run it:
 
@@ -22,6 +22,7 @@ python3 main.py
 - Stores and queries chunk vectors through a small Chroma wrapper.
 - Retrieves ranked evidence chunks for a user question.
 - Refuses unsupported questions when no evidence is available.
+- Provides a local Streamlit interface for asking questions against the sample corpus.
 - Provides a demo ingestion script and focused tests.
 
 ## Architecture
@@ -41,6 +42,9 @@ Documents
 
 Implemented today: documents -> metadata validation -> chunking -> embeddings -> vector store -> retrieval -> answer/refusal shaping.
 
+The Streamlit app is a local demo interface. AWS deployment, authentication,
+managed vector search, and LLM provider routing are planned production layers.
+
 ## Local Development
 
 Run the current test suite:
@@ -59,6 +63,12 @@ Run the end-to-end local RAG demo:
 
 ```bash
 python3 scripts/run_rag_demo.py
+```
+
+Run the local Streamlit app:
+
+```bash
+streamlit run app.py
 ```
 
 ## Repository Layout
