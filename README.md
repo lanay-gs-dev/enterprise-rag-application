@@ -55,6 +55,12 @@ Run the ingestion demo:
 python3 main.py
 ```
 
+Run the end-to-end local RAG demo:
+
+```bash
+python3 scripts/run_rag_demo.py
+```
+
 ## Repository Layout
 
 ```text

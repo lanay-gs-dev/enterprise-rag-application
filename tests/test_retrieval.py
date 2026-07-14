@@ -32,7 +32,12 @@ class RetrievalTests(unittest.TestCase):
             results = retrieve("Is MFA required?", k=1)
 
         embed.assert_called_once_with("Is MFA required?")
-        query.assert_called_once_with([1.0, 0.0, 0.0], k=1)
+        query.assert_called_once_with(
+            [1.0, 0.0, 0.0],
+            k=1,
+            collection_name="enterprise_rag_chunks",
+            persist_dir="chroma_db",
+        )
         self.assertEqual(results, expected)
 
     def test_rejects_blank_question(self) -> None:
