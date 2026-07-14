@@ -86,6 +86,13 @@ curl -X POST http://127.0.0.1:8000/ask \
   -d '{"question": "Is multi-factor authentication required?"}'
 ```
 
+Build and run the FastAPI service with Docker:
+
+```bash
+docker build -t enterprise-rag-api .
+docker run -p 8000:8000 enterprise-rag-api
+```
+
 ## Repository Layout
 
 ```text
