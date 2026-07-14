@@ -1,89 +1,101 @@
 """
-vectorstore.py — Store vectors, find neighbors. Chroma edition.
+Vector store utilities for saving and searching embedded chunks.
 
-WHY CHROMA (vs FAISS, vs pgvector, vs OpenSearch — know this table):
-  • Chroma  — embedded DB, persists to disk, stores metadata alongside
-              vectors, zero servers. Perfect for local apps + demos. ← us
-  • FAISS   — a raw index LIBRARY (Meta). Blazing fast, but no metadata
-              storage and no persistence layer — you build those yourself.
-  • pgvector— vectors inside Postgres. Right answer when you already run
-              Postgres and want SQL + vectors together.
-  • OpenSearch/managed — the AWS-native path; where this design maps in
-              production (see docs/aws_architecture_mapping.md).
-
-The skill being taught here: we wrap Chroma behind our OWN two functions
-(build_index / query_index). If we ever swap Chroma for OpenSearch, only
-THIS FILE changes. Wrapping third-party libraries behind your own thin
-interface is one of the highest-value habits in engineering.
+This module wraps Chroma behind a small local interface. Keeping Chroma usage
+inside this file makes the rest of the RAG pipeline easier to change later if
+we move from local development to a managed vector store such as OpenSearch.
 """
+
+from __future__ import annotations
+
+from pathlib import Path
 
 import chromadb
 
-from src.config import get_settings
-from src.schemas import Chunk, DocumentMetadata, RetrievedChunk
+from enterprise_rag.models import DocumentChunk, RetrievedChunk
 
-COLLECTION = "ironwood_docs"
-
-
-def _client():
-    return chromadb.PersistentClient(path=get_settings().chroma_dir)
+DEFAULT_COLLECTION_NAME = "enterprise_rag_chunks"
+DEFAULT_PERSIST_DIR = "chroma_db"
 
 
-def build_index(chunks: list[Chunk], embeddings: list[list[float]]) -> int:
-    """(Re)build the collection from scratch.
+def get_client(persist_dir: str | Path = DEFAULT_PERSIST_DIR):
+    """Create a persistent Chroma client."""
+    return chromadb.PersistentClient(path=str(persist_dir))
 
-    WHY DELETE-THEN-CREATE: for a small corpus, full rebuilds are simpler
-    and safer than incremental updates — no stale chunks from renamed
-    sections. Incremental indexing is a real production concern; it's in
-    docs/future_ladder.md, not in v1. Scope control in action.
 
-    GOTCHA: Chroma metadata values must be primitives (str/int/float/bool),
-    so we flatten our Pydantic model with model_dump() — every field is
-    already a string by design. That wasn't luck; schemas.py chose str
-    types partly for this reason. Design decisions ripple.
-    """
-    client = _client()
+def build_index(
+    chunks: list[DocumentChunk],
+    embeddings: list[list[float]],
+    collection_name: str = DEFAULT_COLLECTION_NAME,
+    persist_dir: str | Path = DEFAULT_PERSIST_DIR,
+) -> int:
+    """Rebuild a Chroma collection from chunks and matching embeddings."""
+    if len(chunks) != len(embeddings):
+        raise ValueError("chunks and embeddings must have the same length")
+
+    client = get_client(persist_dir)
     try:
-        client.delete_collection(COLLECTION)
+        client.delete_collection(collection_name)
     except Exception:
-        pass  # first run — nothing to delete
+        pass
 
-    col = client.create_collection(COLLECTION, metadata={"hnsw:space": "cosine"})
-    col.upsert(
-        ids=[c.chunk_id for c in chunks],
+    collection = client.create_collection(collection_name, metadata={"hnsw:space": "cosine"})
+    collection.add(
+        ids=[chunk.chunk_id for chunk in chunks],
         embeddings=embeddings,
-        documents=[c.text for c in chunks],
-        metadatas=[
-            {**c.metadata.model_dump(), "section": c.section, "doc_id": c.doc_id}
-            for c in chunks
-        ],
+        documents=[chunk.text for chunk in chunks],
+        metadatas=[_metadata_for_chroma(chunk) for chunk in chunks],
     )
-    return col.count()
+    return collection.count()
 
 
-def query_index(query_embedding: list[float], k: int) -> list[RetrievedChunk]:
-    """Nearest-neighbor search → our RetrievedChunk schema.
-
-    SCORE MATH: Chroma returns cosine DISTANCE (0 = identical). We convert
-    to similarity = 1 - distance so "bigger = better" everywhere in the
-    app. Mixed score directions cause real bugs — pick one convention.
-    """
-    col = _client().get_collection(COLLECTION)
-    res = col.query(query_embeddings=[query_embedding], n_results=k)
+def query_index(
+    query_embedding: list[float],
+    k: int = 3,
+    collection_name: str = DEFAULT_COLLECTION_NAME,
+    persist_dir: str | Path = DEFAULT_PERSIST_DIR,
+) -> list[RetrievedChunk]:
+    """Return the nearest chunks for a query embedding."""
+    collection = get_client(persist_dir).get_collection(collection_name)
+    results = collection.query(query_embeddings=[query_embedding], n_results=k)
 
     retrieved: list[RetrievedChunk] = []
-    for rank, (cid, text, meta, dist) in enumerate(
-        zip(res["ids"][0], res["documents"][0], res["metadatas"][0], res["distances"][0]),
+    ids = results["ids"][0]
+    documents = results["documents"][0]
+    metadatas = results["metadatas"][0]
+    distances = results["distances"][0]
+
+    for rank, (chunk_id, text, metadata, distance) in enumerate(
+        zip(ids, documents, metadatas, distances),
         start=1,
     ):
-        section = meta.pop("section")
-        doc_id = meta.pop("doc_id")
-        chunk = Chunk(
-            chunk_id=cid,
-            doc_id=doc_id,
-            section=section,
-            text=text,
-            metadata=DocumentMetadata(**meta),
+        chunk_metadata = {
+            key.removeprefix("metadata_"): value
+            for key, value in metadata.items()
+            if key.startswith("metadata_")
+        }
+        retrieved.append(
+            RetrievedChunk(
+                chunk_id=chunk_id,
+                source_id=str(metadata["source_id"]),
+                text=text,
+                metadata=chunk_metadata,
+                start_char=int(metadata["start_char"]),
+                end_char=int(metadata["end_char"]),
+                score=1 - float(distance),
+                rank=rank,
+            )
         )
-        retrieved.append(RetrievedChunk(chunk=chunk, score=1 - dist, rank=rank))
+
     return retrieved
+
+
+def _metadata_for_chroma(chunk: DocumentChunk) -> dict[str, str | int | float | bool]:
+    chroma_metadata: dict[str, str | int | float | bool] = {
+        "source_id": chunk.source_id,
+        "start_char": chunk.start_char,
+        "end_char": chunk.end_char,
+    }
+    for key, value in chunk.metadata.items():
+        chroma_metadata[f"metadata_{key}"] = value
+    return chroma_metadata

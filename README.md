@@ -4,13 +4,13 @@ Retrieval-Augmented Generation system for answering questions from internal comp
 
 It exists to turn scattered company knowledge into trustworthy answers. The interesting part is the foundation: documents must be validated, owned, classified, chunked, and traceable before a model can answer safely.
 
-Current implementation: Markdown ingestion, metadata validation, deterministic chunking, sample enterprise documents, and tests.
+Current implementation: Markdown ingestion, metadata validation, deterministic chunking, local embedding utilities, a local Chroma vector store wrapper, sample enterprise documents, and tests.
 
 Run it:
 
 ```bash
 python3 -m unittest discover -s tests
-python3 scripts/ingest_demo.py
+python3 main.py
 ```
 
 ## What It Does
@@ -18,6 +18,8 @@ python3 scripts/ingest_demo.py
 - Loads Markdown documents with required front matter.
 - Rejects incomplete or invalid metadata before retrieval prep.
 - Splits documents into stable, citeable chunks with source metadata.
+- Embeds text locally with `sentence-transformers`.
+- Stores and queries chunk vectors through a small Chroma wrapper.
 - Provides a demo ingestion script and focused tests.
 
 ## Architecture
@@ -35,7 +37,7 @@ Documents
   -> evaluation and logging
 ```
 
-Implemented today: documents -> metadata validation -> chunking.
+Implemented today: documents -> metadata validation -> chunking -> embeddings -> vector store.
 
 ## Local Development
 
@@ -48,7 +50,7 @@ python3 -m unittest discover -s tests
 Run the ingestion demo:
 
 ```bash
-python3 scripts/ingest_demo.py
+python3 main.py
 ```
 
 ## Repository Layout
@@ -65,12 +67,11 @@ tests/                    Focused tests
 
 - [Project blueprint](docs/project-blueprint.md)
 - [Architecture summary](docs/architecture.md)
-- [Engineering decisions](docs/decision-log.md)
-- [Evaluation notes](docs/evaluation.md)
-- [Retrospective](docs/retrospective.md)
-- [Lessons learned](docs/lessons-learned.md)
-- [Demo notes](docs/demo-notes.md)
-- [Interview story bank](docs/interview-story-bank.md)
+- [Build checklist](docs/build-checklist.md)
+- [Client interview](docs/client-interview.md)
+- [RAG mental roadmap](docs/rag-mental-roadmap.md)
+- [Chunking strategy notes](docs/chunking-strategy-cheatsheet.md)
+- [Future-state modules](docs/future-state-modules.md)
 
 ## Production Mapping
 

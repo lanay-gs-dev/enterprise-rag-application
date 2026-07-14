@@ -47,6 +47,18 @@ class DocumentChunk:
     end_char: int
 
 
+@dataclass(frozen=True)
+class RetrievedChunk:
+    chunk_id: str
+    source_id: str
+    text: str
+    metadata: dict[str, str]
+    start_char: int
+    end_char: int
+    score: float
+    rank: int
+
+
 def validate_metadata(metadata: dict[str, str]) -> None:
     missing_fields = sorted(REQUIRED_METADATA_FIELDS - metadata.keys())
     if missing_fields:

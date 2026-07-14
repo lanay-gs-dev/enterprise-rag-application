@@ -3,6 +3,10 @@ name = "enterprise-rag-project"
 version = "0.1.0"
 description = "Enterprise RAG application with citations and refusal behavior."
 requires-python = ">=3.10"
+dependencies = [
+    "chromadb",
+    "sentence-transformers",
+]
 
 [tool.ruff]
 line-length = 100
