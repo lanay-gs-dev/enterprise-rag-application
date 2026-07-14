@@ -59,6 +59,13 @@ class RetrievedChunk:
     rank: int
 
 
+@dataclass(frozen=True)
+class Answer:
+    text: str
+    citations: list[str]
+    refused: bool
+
+
 def validate_metadata(metadata: dict[str, str]) -> None:
     missing_fields = sorted(REQUIRED_METADATA_FIELDS - metadata.keys())
     if missing_fields:
