@@ -10,17 +10,18 @@ code that matches the current data model and can be explained end to end.
 - `chunking.py`: deterministic paragraph-aware chunking
 - `embeddings.py`: local text and query embeddings
 - `vectorstore.py`: local Chroma index for embedded chunks
+- `retrieval.py`: query embedding and vector search for ranked evidence chunks
 
 ## Deferred Modules
 
 These capabilities are planned, but should be added only after the previous
 phase is working and tested:
 
-- `retrieval.py`: query embedding, vector search, and optional hybrid reranking
 - `generation.py`: prompt assembly, answer generation, citation checks, refusals
 - `providers.py`: local/API/Bedrock LLM provider routing
 - `config.py`: typed settings and environment configuration
 - `build_index.py`: batch indexing command for full document refreshes
+- optional hybrid reranking for improved retrieval quality
 
 Keeping these out of the runnable package until they are integrated prevents the
 repository from looking more complete than it is and keeps the code easier to

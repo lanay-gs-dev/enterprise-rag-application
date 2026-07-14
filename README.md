@@ -4,7 +4,7 @@ Retrieval-Augmented Generation system for answering questions from internal comp
 
 It exists to turn scattered company knowledge into trustworthy answers. The interesting part is the foundation: documents must be validated, owned, classified, chunked, and traceable before a model can answer safely.
 
-Current implementation: Markdown ingestion, metadata validation, deterministic chunking, local embedding utilities, a local Chroma vector store wrapper, sample enterprise documents, and tests.
+Current implementation: Markdown ingestion, metadata validation, deterministic chunking, local embedding utilities, a local Chroma vector store wrapper, retrieval, sample enterprise documents, and tests.
 
 Run it:
 
@@ -20,6 +20,7 @@ python3 main.py
 - Splits documents into stable, citeable chunks with source metadata.
 - Embeds text locally with `sentence-transformers`.
 - Stores and queries chunk vectors through a small Chroma wrapper.
+- Retrieves ranked evidence chunks for a user question.
 - Provides a demo ingestion script and focused tests.
 
 ## Architecture
@@ -37,7 +38,7 @@ Documents
   -> evaluation and logging
 ```
 
-Implemented today: documents -> metadata validation -> chunking -> embeddings -> vector store.
+Implemented today: documents -> metadata validation -> chunking -> embeddings -> vector store -> retrieval.
 
 ## Local Development
 
