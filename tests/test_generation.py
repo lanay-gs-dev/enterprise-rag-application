@@ -35,6 +35,23 @@ class GenerationTests(unittest.TestCase):
         self.assertEqual(answer.citations, ["security-policy-2026::chunk-0000"])
         self.assertIn("multi-factor authentication", answer.text)
 
+    def test_refuses_when_best_evidence_score_is_too_low(self) -> None:
+        chunk = RetrievedChunk(
+            chunk_id="handbook-2026::chunk-0000",
+            source_id="handbook-2026",
+            text="Vacation days do not roll over.",
+            metadata={"title": "Employee Handbook"},
+            start_char=0,
+            end_char=31,
+            score=0.05,
+            rank=1,
+        )
+
+        answer = answer_from_evidence("What is the travel policy?", [chunk])
+
+        self.assertTrue(answer.refused)
+        self.assertEqual(answer.citations, [])
+
     def test_rejects_blank_question(self) -> None:
         with self.assertRaises(ValueError):
             answer_from_evidence("   ", [])

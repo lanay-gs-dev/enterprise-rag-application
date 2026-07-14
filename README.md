@@ -66,6 +66,12 @@ Run the end-to-end local RAG demo:
 python3 scripts/run_rag_demo.py
 ```
 
+Run the retrieval/refusal evaluation harness:
+
+```bash
+python3 evals/eval_runner.py
+```
+
 Run the local Streamlit app:
 
 ```bash
@@ -111,8 +117,10 @@ tests/                    Focused tests
 - [Client interview](docs/client-interview.md)
 - [RAG mental roadmap](docs/rag-mental-roadmap.md)
 - [Chunking strategy notes](docs/chunking-strategy-cheatsheet.md)
+- [Evaluation harness](docs/evaluation.md)
 - [Future-state modules](docs/future-state-modules.md)
 - [Project 1 closeout](docs/project-1-closeout.md)
+- [Tomorrow plan](docs/tomorrow-plan.md)
 
 ## Production Mapping
 
