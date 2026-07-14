@@ -61,13 +61,13 @@ contains stale documents, and gives employees inconsistent answers.
 
 | Interview signal | Requirement | Where it lives |
 |---|---|---|
-| "show exactly where the answer came from" | Stable `source_id`, chunk IDs, and citations | `src/enterprise_rag/models.py`, future retrieval/generation |
+| "show exactly where the answer came from" | Stable `source_id`, chunk IDs, and citation IDs | `src/enterprise_rag/models.py`, `src/enterprise_rag/retrieval.py`, `src/enterprise_rag/generation.py` |
 | "support and IT teams maintain source documents" | Required `owner` and `department` metadata | `src/enterprise_rag/models.py` |
-| "engineers need retrieval debug information" | Deterministic ingestion and stable chunk IDs | `src/enterprise_rag/ingestion.py`, `src/enterprise_rag/chunking.py` |
+| "engineers need retrieval debug information" | Deterministic ingestion, stable chunk IDs, ranked retrieved chunks | `src/enterprise_rag/ingestion.py`, `src/enterprise_rag/chunking.py`, `src/enterprise_rag/retrieval.py` |
 | "title, owner, source ID, department, document type, effective date, security level" | Required metadata contract | `REQUIRED_METADATA_FIELDS` in `src/enterprise_rag/models.py` |
 | "do not index it; put it on an exception list" | Fail-fast validation now; future quarantine workflow | `validate_metadata`, future ingestion reporting |
 | "confidential guidance shown to wrong audience" | Security label required before indexing | `security_level` validation |
-| "say it does not have enough information instead of guessing" | Future refusal behavior | future generation and citation verification |
+| "say it does not have enough information instead of guessing" | Deterministic refusal behavior now; LLM-backed refusal later | `src/enterprise_rag/generation.py` |
 | "which documents failed ingestion" | Clear validation errors and tests | `MetadataValidationError`, `tests/test_ingestion_chunking.py` |
 
 ## Data Contract For Phase 1

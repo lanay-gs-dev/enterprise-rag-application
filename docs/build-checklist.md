@@ -1,11 +1,11 @@
 # Build Checklist
 
-## Current Phase: Phase 1 - Ingestion
+## Current Phase: Project 1 Closeout
 
 ### Objective
 
-Load Markdown documents, validate required metadata, and return clean `Document`
-objects ready for chunking.
+Finish a local Enterprise RAG foundation that can be tested, demonstrated, and
+explained before moving to an AWS-native version.
 
 ### Where We Are
 
@@ -13,37 +13,62 @@ objects ready for chunking.
 - [x] Business problem connected to messy internal knowledge repositories
 - [x] Phase 1 input/output clarified
 - [x] Project 1 source-of-truth folder clarified
-- [ ] Phase 1 implementation reviewed line by line
-- [ ] Tests run successfully
-- [ ] Phase 1 explained in interview form
+- [x] Phase 1 ingestion implemented and reviewed
+- [x] Phase 2 chunking implemented and reviewed
+- [x] Embeddings and vector store implemented
+- [x] Retrieval and answer/refusal contract implemented
+- [x] Streamlit demo added
+- [x] FastAPI service layer added
+- [x] Docker files added
+- [x] Tests run successfully
+- [x] Project closeout summary added
 
 ### Before Coding
 
 - [x] What problem are we solving?
 - [x] What are the inputs?
 - [x] What are the outputs?
-- [ ] How will we test it?
-- [ ] What could fail?
+- [x] How will we test it?
+- [x] What could fail?
 
 ### Definition Of Done
 
-- [ ] I can explain what ingestion does.
-- [ ] Loader reads one Markdown file.
-- [ ] Loader reads a folder of Markdown files.
-- [ ] Required metadata is validated.
-- [ ] Missing metadata fails loudly.
-- [ ] Invalid security level fails loudly.
-- [ ] Tests pass.
-- [ ] I can explain the AWS equivalent.
+- [x] I can explain what ingestion does.
+- [x] Loader reads one Markdown file.
+- [x] Loader reads a folder of Markdown files.
+- [x] Required metadata is validated.
+- [x] Missing metadata fails loudly.
+- [x] Invalid security level fails loudly.
+- [x] Chunking creates stable, citeable chunks.
+- [x] Embeddings convert text and questions into vectors.
+- [x] Vector store can build and query a local index.
+- [x] Retrieval returns ranked evidence chunks.
+- [x] Answer/refusal layer refuses when no evidence exists.
+- [x] Streamlit and FastAPI demos run locally.
+- [x] Tests pass.
+- [x] I can explain the AWS equivalent.
 
 ### Files
 
 - `data/sample/*.md`
 - `src/enterprise_rag/models.py`
 - `src/enterprise_rag/ingestion.py`
+- `src/enterprise_rag/chunking.py`
+- `src/enterprise_rag/embeddings.py`
+- `src/enterprise_rag/vectorstore.py`
+- `src/enterprise_rag/retrieval.py`
+- `src/enterprise_rag/generation.py`
+- `src/enterprise_rag/pipeline.py`
+- `api.py`
+- `app.py`
 - `tests/test_ingestion_chunking.py`
+- `tests/test_embeddings.py`
+- `tests/test_vectorstore.py`
+- `tests/test_retrieval.py`
+- `tests/test_generation.py`
+- `tests/test_api.py`
 
-### Phase 1 Data Flow
+### Project 1 Data Flow
 
 ```text
 Markdown file
@@ -51,7 +76,11 @@ Markdown file
   -> split front matter metadata from body content
   -> validate required metadata
   -> return Document object
-  -> ready for chunking
+  -> create DocumentChunk objects
+  -> embed chunk text
+  -> build/query vector index
+  -> retrieve evidence
+  -> answer or refuse
 ```
 
 ### Why Predictable Folder Loading Matters

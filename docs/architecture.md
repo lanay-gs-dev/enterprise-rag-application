@@ -1,15 +1,20 @@
 # Architecture Summary
 
-## Current Slice
+## Current Implemented Flow
 
 ```text
 data/sample/*.md
   -> enterprise_rag.ingestion.load_markdown_documents
   -> enterprise_rag.models.validate_metadata
-  -> Document objects ready for chunking
+  -> enterprise_rag.chunking.chunk_document
+  -> enterprise_rag.embeddings.embed_texts
+  -> enterprise_rag.vectorstore.build_index
+  -> enterprise_rag.retrieval.retrieve
+  -> enterprise_rag.generation.answer_from_evidence
+  -> Streamlit app or FastAPI /ask response
 ```
 
-## Target RAG Flow
+## Target Enterprise RAG Flow
 
 ```text
 User question
@@ -29,13 +34,15 @@ User question
 - `Document`: source path, content, and validated metadata
 - `DocumentChunk`: stable chunk ID, source ID, chunk text, copied metadata, and
   character offsets
+- `RetrievedChunk`: retrieved evidence with rank and score
+- `Answer`: final response text, citation IDs, and refusal flag
 
 ## Design Principle
 
 Each phase should produce a clear object that the next phase can trust.
 
 ```text
-Raw file -> Document -> DocumentChunk -> embedding record -> retrieved evidence
+Raw file -> Document -> DocumentChunk -> embedding -> RetrievedChunk -> Answer
 ```
 
 ## AWS Production Mapping
@@ -45,7 +52,7 @@ S3
   -> ingestion Lambda or container job
   -> Bedrock embeddings
   -> OpenSearch vector index
-  -> API Lambda
+  -> FastAPI service on App Runner or ECS
   -> Bedrock generation
   -> CloudWatch logs and metrics
 ```

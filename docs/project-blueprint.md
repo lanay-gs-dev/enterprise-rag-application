@@ -21,14 +21,19 @@ to inspect sources manually and decide which passages are trustworthy.
 ## Inputs
 
 - Implemented first: Markdown documents with front matter metadata
-- Planned later: PDFs, SOPs, knowledge articles, and user questions
+- Implemented now: user questions through the local Streamlit demo and FastAPI
+  `/ask` endpoint
+- Planned later: PDFs, SOPs, knowledge articles, S3 document sources, and
+  authenticated users
 
 ## Outputs
 
 - Phase 1: validated `Document` objects
 - Phase 2: citeable `DocumentChunk` objects
-- Later phases: retrieved evidence, grounded answers, citations, debug info,
-  refusals, and evaluation results
+- Implemented now: retrieved evidence, citation IDs, deterministic
+  answer/refusal responses, Streamlit output, and FastAPI JSON responses
+- Planned later: LLM-backed answers, citation verification, evaluation reports,
+  and access-control-aware responses
 
 ## Success Criteria
 
@@ -54,13 +59,16 @@ documents
 
 ## Current Phase
 
-Phase 1 focuses on ingestion:
+Project 1 local foundation is complete:
 
 ```text
-Markdown file
-  -> parse front matter
-  -> validate metadata
-  -> return Document
+Markdown files
+  -> parse front matter and validate metadata
+  -> chunk documents
+  -> embed chunks
+  -> store/search vectors
+  -> retrieve evidence
+  -> return answer/refusal through Streamlit or FastAPI
 ```
 
 ## AWS Mapping
@@ -71,14 +79,13 @@ Markdown file
 | Ingestion function | Lambda or container job |
 | Metadata validation | Data quality gate / quarantine workflow |
 | Local tests | CI checks |
-| Future vector store | OpenSearch vector index |
-| Future LLM calls | Amazon Bedrock |
+| Local Chroma vector store | OpenSearch vector index or Bedrock Knowledge Bases |
+| Future LLM-backed generation | Amazon Bedrock |
 
-## Out Of Scope For Phase 1
+## Out Of Scope For Project 1
 
-- Embeddings
-- Vector search
-- LLM generation
-- UI
+- LLM-backed generation
 - Access-control enforcement
 - Full evaluation harness
+- AWS deployment
+- PDF/document connector ingestion

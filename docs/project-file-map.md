@@ -5,7 +5,7 @@
 This folder is the source of truth for Project 1:
 
 ```text
-/Users/la-nay_grant_sunday/Documents/Enterprise RAG - Project 1
+/Users/la-nay_grant_sunday/PycharmProjects/Enterprise RAG – Project 1
 ```
 
 All files we create for Project 1 should live here.
@@ -43,7 +43,7 @@ data/
   sample source documents
 
 docs/
-  planning, architecture, checklist, client interview, lessons learned
+  planning, architecture, checklist, client interview, closeout summary
 
 src/
   application code
