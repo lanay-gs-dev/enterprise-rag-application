@@ -4,7 +4,7 @@ Retrieval-Augmented Generation system for answering questions from internal comp
 
 It exists to turn scattered company knowledge into trustworthy answers. The interesting part is the foundation: documents must be validated, owned, classified, chunked, and traceable before a model can answer safely.
 
-Current implementation: Markdown ingestion, metadata validation, deterministic chunking, local embedding utilities, a local Chroma vector store wrapper, retrieval, deterministic refusal/answer response shaping, a local Streamlit demo, sample enterprise documents, and tests.
+Current implementation: Markdown ingestion, metadata validation, deterministic chunking, local embedding utilities, a local Chroma vector store wrapper, retrieval, deterministic refusal/answer response shaping, a local Streamlit demo, a FastAPI service layer, sample enterprise documents, and tests.
 
 Run it:
 
@@ -23,6 +23,7 @@ python3 main.py
 - Retrieves ranked evidence chunks for a user question.
 - Refuses unsupported questions when no evidence is available.
 - Provides a local Streamlit interface for asking questions against the sample corpus.
+- Provides a FastAPI `/ask` endpoint for production-style integration.
 - Provides a demo ingestion script and focused tests.
 
 ## Architecture
@@ -69,6 +70,20 @@ Run the local Streamlit app:
 
 ```bash
 streamlit run app.py
+```
+
+Run the local FastAPI service:
+
+```bash
+uvicorn api:app --reload
+```
+
+Example API request:
+
+```bash
+curl -X POST http://127.0.0.1:8000/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Is multi-factor authentication required?"}'
 ```
 
 ## Repository Layout

@@ -2,29 +2,18 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
-import tempfile
 
 import streamlit as st
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from enterprise_rag.chunking import chunk_document
-from enterprise_rag.embeddings import embed_texts
-from enterprise_rag.generation import answer_from_evidence
-from enterprise_rag.ingestion import load_markdown_documents
-from enterprise_rag.retrieval import retrieve
-from enterprise_rag.vectorstore import build_index
+from enterprise_rag.pipeline import RagRuntime, answer_question, build_sample_index
 
 
 @st.cache_resource(show_spinner="Building local document index...")
-def build_demo_index() -> tuple[str, int]:
-    documents = load_markdown_documents(ROOT / "data" / "sample")
-    chunks = [chunk for document in documents for chunk in chunk_document(document)]
-    embeddings = embed_texts([chunk.text for chunk in chunks])
-    persist_dir = tempfile.mkdtemp(prefix="enterprise-rag-demo-")
-    count = build_index(chunks, embeddings, persist_dir=persist_dir)
-    return persist_dir, count
+def build_demo_index() -> RagRuntime:
+    return build_sample_index(ROOT / "data" / "sample")
 
 
 def main() -> None:
@@ -38,8 +27,8 @@ def main() -> None:
         st.code("Can employees share passwords in chat?")
         st.code("Do vacation days roll over?")
 
-    persist_dir, chunk_count = build_demo_index()
-    st.success(f"Indexed {chunk_count} chunks from sample documents.")
+    runtime = build_demo_index()
+    st.success(f"Indexed {runtime.chunk_count} chunks from sample documents.")
 
     question = st.text_input(
         "Question",
@@ -48,8 +37,7 @@ def main() -> None:
     )
 
     if st.button("Ask", type="primary") and question.strip():
-        retrieved = retrieve(question, k=2, persist_dir=persist_dir)
-        answer = answer_from_evidence(question, retrieved)
+        answer, retrieved = answer_question(question, runtime, k=2)
 
         st.subheader("Answer")
         if answer.refused:
