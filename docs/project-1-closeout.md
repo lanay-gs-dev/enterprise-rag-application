@@ -57,7 +57,7 @@ makes the project easier to test, explain, debug, and extend.
 | Local chunking | Batch processing pipeline |
 | `sentence-transformers` embeddings | Amazon Bedrock embeddings or SageMaker endpoint |
 | Chroma vector store | OpenSearch Serverless or Bedrock Knowledge Bases |
-| FastAPI service | App Runner, ECS Fargate, or API Gateway + Lambda |
+| FastAPI service | ECS Express Mode, ECS Fargate, or API Gateway + Lambda |
 | Streamlit demo | Internal portal, React UI, or prototype dashboard |
 | Local logs/tests | CloudWatch, CI/CD checks, evaluation reports |
 | `.env` / local config | IAM, Secrets Manager, Parameter Store |
@@ -71,7 +71,7 @@ added deterministic chunking, local embeddings, a Chroma vector store, retrieval
 and a refusal-aware answer contract. I also built both a Streamlit demo and a
 FastAPI service layer, with tests covering the core pipeline. The local version
 maps naturally to AWS using S3, Lambda or ECS, Bedrock embeddings, OpenSearch or
-Bedrock Knowledge Bases, App Runner, and CloudWatch.
+Bedrock Knowledge Bases, ECS Express Mode, and CloudWatch.
 
 ## What I Would Improve Next
 
@@ -80,5 +80,5 @@ Bedrock Knowledge Bases, App Runner, and CloudWatch.
 - Add an evaluation set for retrieval accuracy and refusal behavior.
 - Move sample documents to S3 and run ingestion from an AWS service.
 - Replace local Chroma with OpenSearch Serverless or Bedrock Knowledge Bases.
-- Deploy the FastAPI service using AWS App Runner.
+- Deploy the FastAPI service using ECS Express Mode.
 - Add authentication, request logging, and cost monitoring.

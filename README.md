@@ -130,6 +130,7 @@ tests/                    Focused tests
 | Local files | S3 |
 | Local Python pipeline | Lambda or containerized jobs |
 | Chroma | OpenSearch vector index |
+| FastAPI service | ECS Express Mode or ECS Fargate |
 | Local LLM calls | Amazon Bedrock |
 | Local logs | CloudWatch |
 | Local config | IAM, Secrets Manager, parameter store |

@@ -46,14 +46,15 @@ For each failure, ask:
 
 ## Part 4: AWS Deployment Setup
 
-Start with the safest AWS path:
+Start with the safest AWS path for new AWS customers:
 
 1. Confirm budget alerts are active.
-2. Install Docker Desktop or choose an App Runner source deployment path.
+2. Install Docker Desktop.
 3. Build and test the FastAPI container locally.
-4. Deploy FastAPI to AWS App Runner.
-5. Confirm `/health` and `/ask`.
-6. Watch CloudWatch logs.
+4. Push the container image to Amazon ECR.
+5. Deploy FastAPI with ECS Express Mode.
+6. Confirm `/health`, `/docs`, and `/ask`.
+7. Watch CloudWatch logs.
 
 ## Part 5: AWS-Native Upgrade Roadmap
 

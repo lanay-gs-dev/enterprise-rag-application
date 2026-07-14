@@ -52,7 +52,7 @@ S3
   -> ingestion Lambda or container job
   -> Bedrock embeddings
   -> OpenSearch vector index
-  -> FastAPI service on App Runner or ECS
+  -> FastAPI service on ECS Express Mode or ECS Fargate
   -> Bedrock generation
   -> CloudWatch logs and metrics
 ```

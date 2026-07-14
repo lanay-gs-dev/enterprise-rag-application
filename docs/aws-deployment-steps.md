@@ -12,11 +12,25 @@ The local app has two interfaces:
 
 For AWS, deploy the FastAPI service first.
 
+## Important AWS Update
+
+AWS App Runner is no longer accepting new customers as of April 30, 2026.
+
+For this project, the recommended first AWS path is now:
+
+```text
+Docker image -> Amazon ECR -> Amazon ECS Express Mode -> public HTTPS API
+```
+
+App Runner should only be used if the AWS account already has existing App
+Runner access. Otherwise, use ECS Express Mode.
+
 ## Before AWS
 
-1. Confirm budget alerts are active.
+1. Confirm AWS budget alerts are active.
 2. Confirm GitHub is up to date.
 3. Confirm local tests pass.
+4. Confirm Docker Desktop is installed and running.
 
 ```bash
 git status
@@ -24,115 +38,168 @@ python -m unittest discover -s tests
 python evals/eval_runner.py
 ```
 
-## Recommended First AWS Path
+## What We Are Deploying
 
-Use AWS App Runner if it is available in your AWS account.
-
-Why:
-
-- It is simpler than ECS for a first deployment.
-- It is designed for web apps and APIs.
-- It can connect to GitHub or deploy from a container image.
-- It gives a public HTTPS endpoint.
-
-If App Runner is not available in your account, use ECS Fargate as the fallback.
-
-## Option A: App Runner From GitHub Source
-
-This avoids Docker at first.
-
-1. Open AWS Console.
-2. Go to App Runner.
-3. Create service.
-4. Choose source code repository.
-5. Connect GitHub.
-6. Select:
+The deployable service is the FastAPI app:
 
 ```text
-Repository: lanay-gs-dev/enterprise-rag-application
-Branch: main
-Source directory: /
+api.py
 ```
 
-7. Configure build:
+The API exposes:
 
 ```text
-Runtime: Python 3
-Build command: pip install .
-Start command: uvicorn api:app --host 0.0.0.0 --port 8000
-Port: 8000
+GET /health
+POST /ask
+GET /docs
 ```
 
-8. Configure service:
+Streamlit remains the local demo UI for now. The first AWS deployment should be
+the API because it is smaller, easier to test, and closer to a production
+service boundary.
+
+## Deployment Architecture
 
 ```text
-Service name: enterprise-rag-api
-CPU/memory: smallest available option
-Deployment: manual for first deployment
+Local code
+  -> Dockerfile
+  -> local Docker image
+  -> Amazon ECR image repository
+  -> ECS Express Mode service
+  -> public HTTPS endpoint
+  -> /health, /docs, /ask
 ```
 
-9. Create and deploy.
-10. Wait for status: `Running`.
-11. Open the default App Runner URL.
-12. Test:
+## Step 1: Build And Test The Container Locally
 
-```text
-/health
-/docs
-```
-
-## Option B: Docker Image To ECR, Then App Runner Or ECS
-
-Use this if you want to practice container deployment.
-
-Local build:
+From the project root:
 
 ```bash
 docker build -t enterprise-rag-api .
 docker run -p 8000:8000 enterprise-rag-api
 ```
 
-Test locally:
+Then open:
 
 ```text
 http://127.0.0.1:8000/health
 http://127.0.0.1:8000/docs
 ```
 
-Then:
+Expected health response:
 
-1. Create an ECR repository.
-2. Authenticate Docker to ECR.
-3. Tag the image.
-4. Push the image.
-5. Create App Runner or ECS Fargate service from that image.
-
-## First Production Checks
-
-After deployment, verify:
-
-```text
-GET /health returns {"status": "ok"}
-POST /ask returns answer, citations, refused, retrieved
-CloudWatch logs show startup and request logs
+```json
+{"status":"ok"}
 ```
 
-Example request:
+## Step 2: Create An ECR Repository
+
+In AWS Console:
+
+1. Open Amazon ECR.
+2. Create a private repository.
+3. Name it:
+
+```text
+enterprise-rag-api
+```
+
+4. Save the repository URI.
+
+It will look similar to:
+
+```text
+ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/enterprise-rag-api
+```
+
+## Step 3: Push The Docker Image To ECR
+
+Use the commands AWS gives you in the ECR "View push commands" screen.
+
+They will look like this pattern:
 
 ```bash
-curl -X POST https://YOUR-AWS-URL/ask \
+aws ecr get-login-password --region us-east-1 \
+  | docker login --username AWS --password-stdin ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com
+
+docker tag enterprise-rag-api:latest ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/enterprise-rag-api:latest
+
+docker push ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/enterprise-rag-api:latest
+```
+
+Replace:
+
+```text
+ACCOUNT_ID
+us-east-1
+```
+
+with the values from your AWS account and region.
+
+## Step 4: Create The ECS Express Mode Service
+
+In AWS Console:
+
+1. Open Amazon ECS.
+2. Choose ECS Express Mode.
+3. Create a service.
+4. Use the ECR image URI from Step 3.
+5. Configure:
+
+```text
+Service name: enterprise-rag-api
+Container port: 8000
+Health check path: /health
+CPU/memory: smallest option available for first deployment
+Desired tasks: 1
+```
+
+6. Use or create the required ECS roles:
+
+```text
+ECS task execution role
+ECS infrastructure role
+```
+
+7. Create the service.
+8. Wait for it to reach a running state.
+9. Copy the public service URL.
+
+## Step 5: Test The AWS API
+
+Open:
+
+```text
+https://YOUR-ECS-URL/health
+https://YOUR-ECS-URL/docs
+```
+
+Then test `/ask` from Swagger or curl:
+
+```bash
+curl -X POST https://YOUR-ECS-URL/ask \
   -H "Content-Type: application/json" \
   -d '{"question": "Is multi-factor authentication required?"}'
+```
+
+Expected response fields:
+
+```text
+answer
+citations
+refused
+retrieved
 ```
 
 ## Cost Safety
 
 After testing:
 
-1. Review App Runner or ECS service status.
+1. Review the ECS service status.
 2. Review CloudWatch logs.
 3. Check AWS Billing.
-4. Pause or delete the service if you are done testing.
+4. Delete the ECS service if you are done testing.
+5. Delete unused load balancers, target groups, and ECR images if needed.
 
 Do not create OpenSearch, Bedrock Knowledge Bases, or SageMaker resources until
 the basic API deployment is working and costs are reviewed.
@@ -142,8 +209,17 @@ the basic API deployment is working and costs are reviewed.
 After the FastAPI deployment works:
 
 1. Move sample Markdown documents to S3.
-2. Trigger ingestion from S3 changes.
+2. Trigger ingestion from S3 changes with Lambda, ECS, or Glue.
 3. Replace local embeddings with Bedrock embeddings.
 4. Replace Chroma with OpenSearch Serverless or Bedrock Knowledge Bases.
 5. Add Bedrock-backed answer generation.
 6. Add IAM-scoped access, Secrets Manager, and CloudWatch metrics.
+
+## Interview Explanation
+
+I containerized the FastAPI RAG service and deployed it through the AWS container
+path: ECR for image storage and ECS Express Mode for running the service. The
+local system still uses Markdown, metadata validation, chunking, embeddings,
+retrieval, citations, and refusal checks, but the deployment boundary now looks
+like a real production API. This gives me a clean path to replace local pieces
+with AWS-native services like S3, Bedrock, OpenSearch, IAM, and CloudWatch.
