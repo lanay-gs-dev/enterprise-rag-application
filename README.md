@@ -1,30 +1,28 @@
-# Enterprise RAG Project
+# Enterprise RAG Application
 
-Retrieval-Augmented Generation system for answering questions from internal company documents with citations, refusal behavior, and explainable retrieval.
+A local Retrieval-Augmented Generation prototype that answers questions over an internal document corpus with retrieved evidence, citations, and refusal behavior.
 
-It exists to turn scattered company knowledge into trustworthy answers. The interesting part is the foundation: documents must be validated, owned, classified, chunked, and traceable before a model can answer safely.
+**Status:** Active prototype. The local pipeline, demo interfaces, tests, and evaluation harness are implemented. AWS deployment and LLM-backed generation are planned.
 
-Current implementation: Markdown ingestion, metadata validation, deterministic chunking, local embedding utilities, a local Chroma vector store wrapper, retrieval, deterministic refusal/answer response shaping, a local Streamlit demo, a FastAPI service layer, sample enterprise documents, and tests.
+## Problem
 
-Run it:
+Important company knowledge is often scattered across policies, procedures, and operating documents. Traditional search can locate files, but employees still have to find the relevant passage and decide whether it supports an answer.
 
-```bash
-python3 -m unittest discover -s tests
-python3 main.py
-```
+This project tests a more traceable approach: validate the source documents, retrieve relevant evidence, return citations, and refuse questions the corpus cannot support.
 
-## What It Does
+## Implemented
 
-- Loads Markdown documents with required front matter.
-- Rejects incomplete or invalid metadata before retrieval prep.
-- Splits documents into stable, citeable chunks with source metadata.
-- Embeds text locally with `sentence-transformers`.
-- Stores and queries chunk vectors through a small Chroma wrapper.
-- Retrieves ranked evidence chunks for a user question.
-- Refuses unsupported questions when no evidence is available.
-- Provides a local Streamlit interface for asking questions against the sample corpus.
-- Provides a FastAPI `/ask` endpoint for production-style integration.
-- Provides a demo ingestion script and focused tests.
+- Markdown ingestion with required front matter
+- Metadata validation before indexing
+- Deterministic, section-aware chunking
+- Local embeddings with `sentence-transformers`
+- Chroma vector indexing and ranked retrieval
+- Deterministic answer/refusal response shaping
+- Streamlit demo and FastAPI `/ask` endpoint
+- Docker packaging
+- Unit tests and a 25-question evaluation dataset
+
+LLM-backed generation, access-control enforcement, and AWS deployment are not yet implemented.
 
 ## Architecture
 
@@ -32,55 +30,35 @@ python3 main.py
 Documents
   -> metadata validation
   -> chunking
-  -> embeddings
-  -> vector store
-  -> retrieval
-  -> grounded generation
-  -> citation verification
-  -> answer or refusal
-  -> evaluation and logging
+  -> local embeddings
+  -> Chroma vector index
+  -> ranked retrieval
+  -> answer or refusal with citations
+  -> evaluation
 ```
 
-Implemented today: documents -> metadata validation -> chunking -> embeddings -> vector store -> retrieval -> answer/refusal shaping.
+Streamlit provides the local user demo. FastAPI exposes the same pipeline to other applications through an HTTP interface.
 
-The Streamlit app is a local demo interface. AWS deployment, authentication,
-managed vector search, and LLM provider routing are planned production layers.
+## Run Locally
 
-## Local Development
-
-Run the current test suite:
+Install dependencies and run the tests:
 
 ```bash
+pip install -r requirements.txt
 python3 -m unittest discover -s tests
 ```
 
-Run the ingestion demo:
-
-```bash
-python3 main.py
-```
-
-Run the end-to-end local RAG demo:
+Run the command-line demo and evaluation harness:
 
 ```bash
 python3 scripts/run_rag_demo.py
-```
-
-Run the retrieval/refusal evaluation harness:
-
-```bash
 python3 evals/eval_runner.py
 ```
 
-Run the local Streamlit app:
+Run either interface:
 
 ```bash
 streamlit run app.py
-```
-
-Run the local FastAPI service:
-
-```bash
 uvicorn api:app --reload
 ```
 
@@ -92,49 +70,67 @@ curl -X POST http://127.0.0.1:8000/ask \
   -d '{"question": "Is multi-factor authentication required?"}'
 ```
 
-Build and run the FastAPI service with Docker:
+Build the API container:
 
 ```bash
 docker build -t enterprise-rag-api .
 docker run -p 8000:8000 enterprise-rag-api
 ```
 
+## Evaluation Baseline
+
+The current 25-question golden dataset produced:
+
+```text
+Overall: 22/25
+Retrieval: 25/25
+Refusal: 22/25
+```
+
+The three failures are unsupported questions that retrieved weakly related evidence above the current refusal threshold. They identify the next quality task: improve unsupported-question detection without reducing retrieval accuracy.
+
+See [Evaluation](docs/evaluation.md) for the method and known failure cases.
+
 ## Repository Layout
 
 ```text
-data/sample/              Sample company documents
-docs/                     Blueprint, architecture, decisions, evaluation notes
-scripts/                  Small local demos and utilities
+data/sample/              Fictional source documents
+docs/                     Architecture, decisions, requirements, and evaluation
+evals/                    Golden questions and evaluation runner
+scripts/                  Local demos and utilities
 src/enterprise_rag/       Application package
-tests/                    Focused tests
+tests/                    Focused unit tests
 ```
 
 ## Documentation
 
 - [Project blueprint](docs/project-blueprint.md)
-- [Architecture summary](docs/architecture.md)
-- [Build checklist](docs/build-checklist.md)
-- [Client interview](docs/client-interview.md)
-- [RAG mental roadmap](docs/rag-mental-roadmap.md)
-- [Chunking strategy notes](docs/chunking-strategy-cheatsheet.md)
-- [Evaluation harness](docs/evaluation.md)
-- [AWS deployment steps](docs/aws-deployment-steps.md)
-- [Future-state modules](docs/future-state-modules.md)
-- [Project 1 closeout](docs/project-1-closeout.md)
-- [Tomorrow plan](docs/tomorrow-plan.md)
+- [Architecture](docs/architecture.md)
+- [Requirements discovery](docs/requirements-discovery.md)
+- [Engineering decisions](docs/engineering-decisions.md)
+- [Evaluation](docs/evaluation.md)
+- [Deployment plan](docs/deployment.md)
 
-## Production Mapping
+## AWS Production Mapping
 
-| Local development | AWS production equivalent |
+| Local prototype | AWS production option |
 | --- | --- |
-| Local files | S3 |
-| Local Python pipeline | Lambda or containerized jobs |
-| Chroma | OpenSearch vector index |
-| FastAPI service | ECS Express Mode or ECS Fargate |
-| Local LLM calls | Amazon Bedrock |
-| Local logs | CloudWatch |
-| Local config | IAM, Secrets Manager, parameter store |
+| Local document files | Amazon S3 |
+| Local ingestion pipeline | AWS Lambda or an ECS task |
+| `sentence-transformers` | Amazon Bedrock embedding model |
+| Chroma vector index | Amazon OpenSearch or Bedrock Knowledge Bases |
+| Dockerized FastAPI service | Amazon ECR and Amazon ECS |
+| Planned LLM-backed generation | Amazon Bedrock |
+| Local logs and configuration | CloudWatch, IAM, and Secrets Manager |
 
-## Definition of Done
+## Next Steps
 
-This project is complete when the system can be demonstrated end to end, major engineering decisions can be defended, evaluation results are visible, and unsupported questions are refused instead of hallucinated.
+- Deploy the Dockerized FastAPI service to AWS
+- Add LLM-backed grounded generation
+- Improve refusal behavior against the evaluation set
+- Compare the custom retrieval pipeline with Bedrock Knowledge Bases
+- Add authentication and metadata-based access controls
+
+## Repository Note
+
+All sample documents are fictional. No private client, employer, or personal business data is included.
