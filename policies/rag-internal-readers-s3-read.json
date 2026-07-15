@@ -1,0 +1,30 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListPublicAndInternalPrefixes",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::enterprise-rag-project-1a-lgs-123456789012",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "documents/public/",
+            "documents/public/*",
+            "documents/internal/",
+            "documents/internal/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ReadPublicAndInternalDocuments",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": [
+        "arn:aws:s3:::enterprise-rag-project-1a-lgs-123456789012/documents/public/*",
+        "arn:aws:s3:::enterprise-rag-project-1a-lgs-123456789012/documents/internal/*"
+      ]
+    }
+  ]
+}

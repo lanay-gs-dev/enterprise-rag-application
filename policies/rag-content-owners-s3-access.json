@@ -1,0 +1,36 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListIngestionPrefixes",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::enterprise-rag-project-1a-lgs-123456789012",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "ingestion/raw/",
+            "ingestion/raw/*",
+            "ingestion/rejected/",
+            "ingestion/rejected/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "WriteAndReadRawDocuments",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject"
+      ],
+      "Resource": "arn:aws:s3:::enterprise-rag-project-1a-lgs-123456789012/ingestion/raw/*"
+    },
+    {
+      "Sid": "ReadRejectedDocuments",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::enterprise-rag-project-1a-lgs-123456789012/ingestion/rejected/*"
+    }
+  ]
+}
