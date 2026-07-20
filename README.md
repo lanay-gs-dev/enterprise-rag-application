@@ -1,8 +1,8 @@
 # Enterprise RAG Application
 
-A local Retrieval-Augmented Generation prototype that answers questions over an internal document corpus with retrieved evidence, citations, and refusal behavior.
+A Retrieval-Augmented Generation prototype that answers questions over an internal document corpus with retrieved evidence, citations, and refusal behavior.
 
-**Status:** Active prototype. The local pipeline, demo interfaces, tests, and evaluation harness are implemented. AWS deployment and LLM-backed generation are planned.
+**Status:** Active prototype. The local RAG pipeline, demo interfaces, tests, evaluation harness, Docker packaging, and AWS backend deployment slice are implemented. LLM-backed generation, authentication, and a polished public UI are planned.
 
 ## Problem
 
@@ -20,9 +20,10 @@ This project tests a more traceable approach: validate the source documents, ret
 - Deterministic answer/refusal response shaping
 - Streamlit demo and FastAPI `/ask` endpoint
 - Docker packaging
+- AWS Project 1A deployment of the FastAPI backend with S3, IAM, ECR, ECS/Fargate, ALB, and CloudWatch
 - Unit tests and a 25-question evaluation dataset
 
-LLM-backed generation, access-control enforcement, and AWS deployment are not yet implemented.
+LLM-backed generation, application-level access-control enforcement, and a polished public UI are not yet implemented.
 
 ## Architecture
 
@@ -38,6 +39,8 @@ Documents
 ```
 
 Streamlit provides the local user demo. FastAPI exposes the same pipeline to other applications through an HTTP interface.
+
+Project 1A deploys the FastAPI backend API to AWS. The live endpoint is intentionally not published in this repository because the demo API is unauthenticated.
 
 ## Run Locally
 
@@ -77,6 +80,29 @@ docker build -t enterprise-rag-api .
 docker run -p 8000:8000 enterprise-rag-api
 ```
 
+## AWS Deployment Slice
+
+The backend API has been deployed as a containerized FastAPI service using:
+
+```text
+S3 document storage
+IAM users, groups, task role, and execution role
+Amazon ECR image repository
+Amazon ECS/Fargate service
+Application Load Balancer
+CloudWatch logs and ECS metrics
+```
+
+The deployed service exposes:
+
+```text
+GET /health
+GET /docs
+POST /ask
+```
+
+The public load balancer URL is not included because the prototype does not yet have authentication, rate limiting, or a polished user-facing interface.
+
 ## Evaluation Baseline
 
 The current 25-question golden dataset produced:
@@ -110,6 +136,8 @@ tests/                    Focused unit tests
 - [Engineering decisions](docs/engineering-decisions.md)
 - [Evaluation](docs/evaluation.md)
 - [Deployment plan](docs/deployment.md)
+- [AWS access control map](docs/aws-access-control-map.md)
+- [S3 sample data map](docs/s3-sample-data-map.md)
 
 ## AWS Production Mapping
 
@@ -119,17 +147,18 @@ tests/                    Focused unit tests
 | Local ingestion pipeline | AWS Lambda or an ECS task |
 | `sentence-transformers` | Amazon Bedrock embedding model |
 | Chroma vector index | Amazon OpenSearch or Bedrock Knowledge Bases |
-| Dockerized FastAPI service | Amazon ECR and Amazon ECS |
+| Dockerized FastAPI service | Amazon ECR, ECS/Fargate, and an Application Load Balancer |
 | Planned LLM-backed generation | Amazon Bedrock |
 | Local logs and configuration | CloudWatch, IAM, and Secrets Manager |
 
 ## Next Steps
 
-- Deploy the Dockerized FastAPI service to AWS
+- Add authentication before publishing a public demo URL
+- Add a polished user-facing UI that calls the deployed FastAPI backend
 - Add LLM-backed grounded generation
 - Improve refusal behavior against the evaluation set
 - Compare the custom retrieval pipeline with Bedrock Knowledge Bases
-- Add authentication and metadata-based access controls
+- Add application-level metadata-based access controls
 
 ## Repository Note
 

@@ -82,6 +82,6 @@ After the S3/IAM layer is in place, move to the deployment layer:
 ```text
 Docker image
   -> Amazon ECR
-  -> ECS Express Mode
+  -> ECS/Fargate service
   -> FastAPI /health, /docs, /ask
 ```

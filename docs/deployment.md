@@ -1,29 +1,80 @@
-# Deployment Plan
+# Deployment
 
-**Status:** Planned. The FastAPI service is containerized locally; no live AWS deployment is claimed in this repository.
+**Status:** Project 1A backend deployment completed. The FastAPI service has
+been containerized, pushed to Amazon ECR, and run on Amazon ECS/Fargate behind
+an Application Load Balancer.
 
-## First Deployment Slice
+The live URL is intentionally not published in this repository because the
+prototype API is unauthenticated.
+
+## Implemented Deployment Slice
 
 ```text
 Developer
   -> Docker image
   -> Amazon ECR
-  -> Amazon ECS Express Mode
-  -> public HTTPS FastAPI endpoint
+  -> Amazon ECS/Fargate service
+  -> Application Load Balancer
+  -> FastAPI /health, /docs, /ask
   -> Amazon CloudWatch logs
 ```
 
-Amazon ECS Express Mode is the preferred first host because it deploys a container on Fargate and configures supporting infrastructure such as networking, load balancing, TLS, monitoring, and auto scaling. See the [AWS ECS Express Mode overview](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/express-service-overview.html).
+ECS/Fargate is the first deployment host because it runs the same Dockerized
+FastAPI service that was tested locally while exposing real AWS deployment
+concepts: task definitions, task roles, task execution roles, services, load
+balancing, health checks, CloudWatch logs, and deployment rollbacks.
 
-## Deployment Steps
+## Implemented AWS Resources
 
-1. Confirm an AWS budget and billing alerts.
-2. Build and test the Docker image locally.
-3. Create an ECR repository and push the tagged image.
-4. Create the required ECS task execution and infrastructure roles.
-5. Deploy the image with ECS Express Mode.
-6. Verify `/health`, `/docs`, and `/ask`.
-7. Review CloudWatch logs and remove unused resources after testing.
+| Layer | Resource |
+| --- | --- |
+| Document storage | S3 bucket with `documents/`, `ingestion/`, and `evaluation/` prefixes |
+| Human access model | IAM groups and scoped S3 policies |
+| App runtime permissions | ECS task role with S3 document read access |
+| ECS startup permissions | ECS task execution role for ECR pull and CloudWatch logs |
+| Image storage | ECR repository `enterprise-rag-api` |
+| Runtime | ECS/Fargate service `enterprise-rag-api` |
+| Routing | Application Load Balancer and target group |
+| Health check | Target group HTTP health check on `/health` |
+| Observability | CloudWatch log group `/ecs/enterprise-rag-api` |
+
+## Key Deployment Lessons
+
+- Docker packages the Python FastAPI app and dependencies; it does not replace
+  the Python RAG logic.
+- ECR stores the Docker image; ECS runs the image as a container.
+- The task role is for application permissions after startup.
+- The task execution role is for ECS startup actions such as ECR image pull and
+  CloudWatch log setup.
+- Images built on Apple Silicon may default to ARM64. The ECS task used
+  Linux/X86_64, so the image had to be rebuilt and pushed for `linux/amd64`.
+- The container health check was left blank. The load balancer target group uses
+  `/health` as the HTTP health check path.
+- The initial `.25 vCPU` and `.5 GB` task size was too small for this Python AI
+  stack, so the task definition was increased to `1 vCPU` and `3 GB`.
+
+## Verification
+
+The deployed backend exposes:
+
+```text
+GET /health
+GET /docs
+POST /ask
+```
+
+Expected checks:
+
+```text
+/health returns {"status":"ok"}
+/docs opens FastAPI Swagger UI
+/ask returns answer, citations, refusal flag, and retrieved chunks
+CloudWatch receives container logs
+```
+
+The Swagger UI is a developer testing interface, not a polished public website.
+A user-facing UI should be added only after authentication and cost controls are
+in place.
 
 ## AWS-Native RAG Upgrade
 
@@ -45,7 +96,7 @@ Bedrock Knowledge Bases can manage document ingestion, chunking, embeddings, and
 
 | Need | Preferred option | Reason |
 | --- | --- | --- |
-| Host the containerized FastAPI service | ECS Express Mode | Fits an HTTP container and reduces initial infrastructure setup |
+| Host the containerized FastAPI service | ECS/Fargate | Runs the Dockerized backend without managing EC2 instances |
 | Process document uploads asynchronously | Lambda or an ECS task | Event-driven ingestion should be separate from the request API |
 | Store source documents | S3 | Durable object storage with event and lifecycle support |
 | Generate embeddings and answers | Bedrock | Managed model access without hosting model infrastructure |

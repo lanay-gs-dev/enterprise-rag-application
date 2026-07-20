@@ -45,14 +45,32 @@ Each phase should produce a clear object that the next phase can trust.
 Raw file -> Document -> DocumentChunk -> embedding -> RetrievedChunk -> Answer
 ```
 
-## AWS Production Mapping
+## AWS Mapping
+
+## Implemented Project 1A AWS Deployment
+
+```text
+FastAPI backend
+  -> Docker image
+  -> Amazon ECR
+  -> ECS/Fargate service
+  -> Application Load Balancer
+  -> /health, /docs, /ask
+  -> CloudWatch logs
+```
+
+This deployment runs the same Python RAG application code that runs locally. It
+does not yet replace local retrieval components with Bedrock, OpenSearch, or
+Bedrock Knowledge Bases.
+
+## Future AWS-Native RAG Mapping
 
 ```text
 S3
   -> ingestion Lambda or container job
   -> Bedrock embeddings
   -> OpenSearch vector index
-  -> FastAPI service on ECS Express Mode or ECS Fargate
+  -> FastAPI service on ECS/Fargate
   -> Bedrock generation
   -> CloudWatch logs and metrics
 ```
