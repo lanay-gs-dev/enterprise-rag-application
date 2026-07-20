@@ -21,6 +21,7 @@ This project tests a more traceable approach: validate the source documents, ret
 - Streamlit demo and FastAPI `/ask` endpoint
 - Docker packaging
 - AWS Project 1A deployment of the FastAPI backend with S3, IAM, ECR, ECS/Fargate, ALB, and CloudWatch
+- GitHub Actions workflow for automated unit tests
 - Unit tests and a 25-question evaluation dataset
 
 LLM-backed generation, application-level access-control enforcement, and a polished public UI are not yet implemented.
@@ -126,6 +127,7 @@ evals/                    Golden questions and evaluation runner
 scripts/                  Local demos and utilities
 src/enterprise_rag/       Application package
 tests/                    Focused unit tests
+.github/workflows/        GitHub Actions test workflow
 ```
 
 ## Documentation
